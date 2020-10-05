@@ -8,3 +8,10 @@
 
   (fact "given account limit < transaction amount should return false"
     (rules/hasLimit? {:limit 10} 90) => false))
+
+(fact "activeCard?"
+  (fact "given card is active should return true"
+    (rules/activeCard? {:activeCard true}) => true)
+
+  (fact "given card is not active should return false"
+    (rules/activeCard? {:activeCard false}) => false))
