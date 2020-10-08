@@ -11,12 +11,20 @@
    [account]
    (true? (:active-card account)))
 
+(defn- filter-transactions-between-dates
+  [transactions from to]
+  (filter #(t/within? from to (:time %)) transactions))
+
+(defn- two-minutes-ago
+  "return datetime value of two two minutes ago"
+  []
+  (t/minus (t/now) (t/minutes 2)))
+
 (defn high-frequency-small-interval?
   [transactions]
   "return true if there are 3 or more transactions on a 2 minute interval"
-  (let [interval-in-minutes 2
-        high-frequency-transaction-count 3
-        date-time-start (t/minus (t/now) (t/minutes interval-in-minutes))]
-    (-> (filter #(t/within? date-time-start (t/now) (:time %)) transactions)
+  (let [high-frequency-transaction-count 3]
+    (-> (filter-transactions-between-dates transactions (two-minutes-ago) (t/now))
         count
         (> high-frequency-transaction-count))))
+

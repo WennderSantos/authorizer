@@ -40,5 +40,3 @@
                                         {:time (t/minus (t/now) (t/minutes 2))}
                                         {:time (t/minus (t/now) (t/minutes 5))}
                                         {:time (t/now)}]) => false))
-
-
