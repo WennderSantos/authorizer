@@ -5,7 +5,7 @@
   "return true if an account has sufficient limit to complete a transaction,
    false otherwise"
   [account transaction-amount]
-  (true? (>= (:limit account) transaction-amount)))
+  (true? (>= (:available-limit account) transaction-amount)))
 
 (defn active-card?
   "return true if a card is active, false otherwise"

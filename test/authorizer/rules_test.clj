@@ -5,10 +5,10 @@
 
 (fact "has-limit?"
   (fact "given account limit >= transaction amount should return true"
-    (rules/has-limit? {:limit 100} 90) => true)
+    (rules/has-limit? {:available-limit 100} 90) => true)
 
   (fact "given account limit < transaction amount should return false"
-    (rules/has-limit? {:limit 10} 90) => false))
+    (rules/has-limit? {:available-limit 10} 90) => false))
 
 (fact "active-card?"
   (fact "given card is active should return true"
