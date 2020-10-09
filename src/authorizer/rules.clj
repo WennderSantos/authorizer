@@ -1,6 +1,15 @@
 (ns authorizer.rules
   (:require [clj-time.core :as t]))
 
+(def empty-violations [])
+
+(defn new-account
+  "return a new account with empty violations"
+  [active-card available-limit]
+  {:account {:active-card active-card
+             :available-limit available-limit}
+   :violations empty-violations})
+
 (defn has-limit?
   "return true if an account has sufficient limit to complete a transaction,
    false otherwise"
