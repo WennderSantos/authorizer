@@ -40,3 +40,36 @@
                                         {:time (t/minus (t/now) (t/minutes 2))}
                                         {:time (t/minus (t/now) (t/minutes 5))}
                                         {:time (t/now)}]) => false))
+
+ (fact "are-there-similar-transactions?"
+  (fact "given there are more than 2 similar transactions in the last 2 minutes should return true"
+    (rules/are-there-similar-transactions? {:time (t/now) :merchant "Burger King" :amount 20}
+                                           [{:time (t/now) :merchant "Burger King" :amount 20}
+                                            {:time (t/now) :merchant "Burger King" :amount 20}
+                                            {:time (t/now) :merchant "Burger King" :amount 20}
+                                            {:time (t/now)}]) => true
+
+    (rules/are-there-similar-transactions? {:time (t/now) :merchant "Burger King" :amount 20}
+                                           [{:time (t/now) :merchant "Burger King" :amount 20}
+                                            {:time (t/minus (t/now) (t/minutes 2)) :merchant "Burger King" :amount 20}
+                                            {:time (t/now) :merchant "Burger King" :amount 20}
+                                            {:time (t/now)}]) => true)
+
+  (fact "given there are less or equal to 2 similar transactions in the last 2 minutes should return false"
+    (rules/are-there-similar-transactions? {:time (t/now) :merchant "mc donalds" :amount 10}
+                                           [{:time (t/now) :merchant "Burger King" :amount 20}
+                                            {:time (t/now)}]) => false
+
+    (rules/are-there-similar-transactions? {:time (t/now) :merchant "mc donalds" :amount 10}
+                                           [{:time (t/now) :merchant "mc donalds" :amount 10}
+                                            {:time (t/now) :merchant "mc donalds" :amount 10}]) => false
+
+    (rules/are-there-similar-transactions? {:time (t/now) :merchant "mc donalds" :amount 10}
+                                           [{:time (t/now) :merchant "mc donalds" :amount 10}
+                                            {:time (t/now) :merchant "mc donalds" :amount 10}
+                                            {:time (t/now) :merchant "mc donalds" :amount 20}]) => false
+
+    (rules/are-there-similar-transactions? {:time (t/now) :merchant "mc donalds" :amount 10}
+                                           [{:time (t/now) :merchant "mc donalds" :amount 10}
+                                            {:time (t/now) :merchant "mc donalds" :amount 10}
+                                            {:time (t/minus (t/now) (t/minutes 3)) :merchant "mc donalds" :amount 10}]) => false))
