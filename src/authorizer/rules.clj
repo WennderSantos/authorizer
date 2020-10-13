@@ -51,6 +51,11 @@
         count
         (> high-frequency-transaction-count))))
 
+(defn- similar-transactions?
+  [tr1 tr2]
+  (and (= (:amount tr1) (:amount tr2))
+       (= (:merchant tr1) (:merchant tr2))))
+
 (defn are-there-similar-transactions?
   "return true if current-transaction has similar values (amount and merchant)
    compared with transactions from the last two minutes,
@@ -58,9 +63,7 @@
   [current-transaction transactions]
   (let [similar-transactions-accepted 2
         transactions-from-last-two-minutes (filter-transactions-between-dates transactions (two-minutes-ago) (t/now))]
-    (-> (filter #(and (= (:amount current-transaction) (:amount %))
-                      (= (:merchant current-transaction) (:merchant %)))
-                transactions-from-last-two-minutes)
+    (-> (filter #(similar-transactions? current-transaction %) transactions-from-last-two-minutes)
         count
         (> similar-transactions-accepted))))
 
