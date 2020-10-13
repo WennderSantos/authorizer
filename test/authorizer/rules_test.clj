@@ -83,3 +83,10 @@
     (rules/new-account false 100) => {:account {:active-card false
                                                 :available-limit 100}
                                       :violations []}))
+
+(fact "is-account?"
+  (fact "given map contains :account should return true"
+    (rules/is-account? {:account {:availableLimit 100}}) => true)
+
+  (fact "given map does not contains :account should return false"
+    (rules/is-account? {:transaction {:merchant "bk"}}) => false))

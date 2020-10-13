@@ -3,6 +3,12 @@
 
 (def empty-violations [])
 
+(defn is-account?
+  "return true if a map contains :account keyword
+   false otherwise"
+  [input]
+  (contains? input :account))
+
 (defn new-account
   "return a new account with empty violations"
   [active-card available-limit]
