@@ -90,3 +90,10 @@
 
   (fact "given map does not contains :account should return false"
     (rules/is-account? {:transaction {:merchant "bk"}}) => false))
+
+(fact "is-transaction?"
+  (fact "given map contains :transaction should return true"
+    (rules/is-transaction? {:transaction {:amount 90}}) => true)
+
+  (fact "given map does not contains :transaction should return false"
+    (rules/is-account? {:transaction {:merchant "bk"}}) => false))

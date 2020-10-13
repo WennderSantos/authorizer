@@ -9,6 +9,12 @@
   [input]
   (contains? input :account))
 
+(defn is-transaction?
+  "return true if a map contains :transaction keyword
+   false otherwise"
+  [input]
+  (contains? input :transaction))
+
 (defn new-account
   "return a new account with empty violations"
   [active-card available-limit]
