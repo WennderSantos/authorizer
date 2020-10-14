@@ -74,15 +74,20 @@
                                             {:time (t/now) :merchant "mc donalds" :amount 10}
                                             {:time (t/minus (t/now) (t/minutes 3)) :merchant "mc donalds" :amount 10}]) => false))
 
-(fact "new-account given valid parameters should return an account with empty violations"
-  (fact "when ative card is true"
-    (rules/new-account true 100) => {:account {:active-card true
-                                               :available-limit 100}
-                                     :violations []})
-  (fact "when ative card is false"
-    (rules/new-account false 100) => {:account {:active-card false
-                                                :available-limit 100}
-                                      :violations []}))
+(fact "new-account"
+  (fact "given state does not contains an account should return an account with empty violations"
+    (rules/new-account {} {:account {:active-card true
+                                     :available-limit 100}}) => {:account {:active-card true
+                                                                           :available-limit 100}
+                                                                 :violations []})
+
+  (fact "given state contains an account should apply violation :account-already-initialized"
+    (rules/new-account {:account {:active-card true
+                                  :available-limit 100}}
+                       {:account {:active-card true
+                                  :available-limit 100}}) => {:account {:active-card true
+                                                                        :available-limit 100}
+                                                              :violations [:account-already-initialized]}))
 
 (fact "is-account?"
   (fact "given map contains :account should return true"

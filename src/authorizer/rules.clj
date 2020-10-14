@@ -1,8 +1,6 @@
 (ns authorizer.rules
   (:require [clj-time.core :as t]))
 
-(def empty-violations [])
-
 (defn is-account?
   "return true if a map contains :account keyword
    false otherwise"
@@ -15,12 +13,19 @@
   [input]
   (contains? input :transaction))
 
+(defn- apply-violation
+  [state violation]
+  (update state :violations conj violation))
+
 (defn new-account
-  "return a new account with empty violations"
-  [active-card available-limit]
-  {:account {:active-card active-card
-             :available-limit available-limit}
-   :violations empty-violations})
+  "if state does not have an account return a new account with empty violations
+   otherwise apply violation for account already initialized"
+  [state new-account]
+  (if (contains? state :account)
+    (apply-violation state :account-already-initialized)
+    (-> state
+        (conj new-account)
+        (assoc :violations []))))
 
 (defn has-limit?
   "return true if an account has sufficient limit to complete a transaction,
