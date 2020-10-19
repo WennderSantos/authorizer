@@ -71,6 +71,8 @@ I decided to divide the code of the transaction validation in the following step
 
 Data that need to be parsed, like when the user inputs data and when the program outputs data, is being done at the "border" of the whole "architecture" of this app. This lets the functions on the `logic` capable to accept calls from other kinds of front-ends.
 
+For simplicity sake, there are some magic numbers in functions dealing with validation of high-frequency-small-interval and doubled-transaction. These numbers are the minutes interval (2) and the maximum transactions allowed in the interval. A better approach here would be get these values from a config file.
+
 
 # Business decisions
 I assumed some business definitions by myself. In a team, these definitions should be decided together with team members.
