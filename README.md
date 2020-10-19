@@ -5,7 +5,6 @@ A Clojure program that simulates the authorization flow of a financial transacti
 * [How it works](#how-does-it-works)
 * [Built with](#built-with)
 * [Getting started](#getting-started)
-* [Docker support](#docker-support)
 * [Code and design decisions](#code-and-design-decisions)
 * [Business decisions](#business-decisions)
 
