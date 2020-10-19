@@ -1,4 +1,4 @@
-(ns authorizer.rules
+(ns authorizer.logic
   (:require [clj-time.core :as t]
             [clj-time.format :as f]))
 
