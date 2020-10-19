@@ -64,7 +64,6 @@
 
 (fact "are-there-similar-transactions?"
   (fact "given there are 2 or more similar transactions"
-
     (fact "in sequence in the last 2 minutes should return true"
       (logic/are-there-similar-transactions? trx-fixture/two-similar-in-sequence-on-two-minutes-interval
                                              (first trx-fixture/two-similar-in-sequence-on-two-minutes-interval)) => true)
