@@ -12,6 +12,30 @@
   (fact "given map does not contains :account should return false"
     (logic/is-account? {:transaction {:merchant "bk"}}) => false))
 
+(fact "is-deny-list?"
+  (fact "given map contains :denyList should return true"
+    (logic/is-deny-list? {:denyList ["merchant-A" "merchant-B"]}) => true)
+
+  (fact "given map contains :denyList should return true"
+    (logic/is-deny-list? {:account {:availableLimit 100}}) => false))
+
+(fact "is-marchant-in-deny-list?"
+  (fact "given merchant is in denyList should return true"
+    (logic/is-merchant-in-deny-list? "merchant-A" ["merchant-A" "merchant-B"]) => true)
+
+  (fact "given merchant is not in denyList should return false"
+    (logic/is-merchant-in-deny-list? "merchant-foo" ["merchant-A" "merchant-B"]) => false))
+
+(fact "add-deny-list"
+  (logic/add-deny-list {:account {:activeCard true
+                                  :availableLimit 100}
+                        :violations []
+                        :transactions []} {:denyList ["merchant-a" "merchant-b"]}) => {:account {:activeCard true
+                                                                                     :availableLimit 100
+                                                                                     :denyList ["merchant-a" "merchant-b"]}
+                                                                           :violations []
+                                                                           :transactions []})
+
 (fact "is-transaction?"
   (fact "given map contains :transaction should return true"
     (logic/is-transaction? {:transaction {:amount 90}}) => true)
@@ -21,33 +45,33 @@
 
 (fact "new-account"
   (fact "given state does not already contains an account should return an account with empty violations"
-    (logic/new-account {} {:account {:active-card true
-                                     :available-limit 100}}) => {:account {:active-card true
-                                                                           :available-limit 100}
+    (logic/new-account {} {:account {:activeCard true
+                                     :availableLimit 100}}) => {:account {:activeCard true
+                                                                           :availableLimit 100}
                                                                  :violations []
                                                                  :transactions []})
 
   (fact "given state contains an account should apply violation :account-already-initialized"
-    (logic/new-account {:account {:active-card true
-                                  :available-limit 100}}
-                       {:account {:active-card true
-                                  :available-limit 100}}) => {:account {:active-card true
-                                                                        :available-limit 100}
+    (logic/new-account {:account {:activeCard true
+                                  :availableLimit 100}}
+                       {:account {:activeCard true
+                                  :availableLimit 100}}) => {:account {:activeCard true
+                                                                        :availableLimit 100}
                                                               :violations [:account-already-initialized]}))
 
 (fact "has-limit?"
-  (fact "given account available-limit >= transaction amount should return true"
-    (logic/has-limit? {:available-limit 100} 90) => true)
+  (fact "given account availableLimit >= transaction amount should return true"
+    (logic/has-limit? {:availableLimit 100} 90) => true)
 
-  (fact "given account available-limit < transaction amount should return false"
-    (logic/has-limit? {:available-limit 10} 90) => false))
+  (fact "given account availableLimit < transaction amount should return false"
+    (logic/has-limit? {:availableLimit 10} 90) => false))
 
-(fact "active-card?"
+(fact "activeCard?"
   (fact "given card is active should return true"
-    (logic/active-card? {:active-card true}) => true)
+    (logic/activeCard? {:activeCard true}) => true)
 
   (fact "given card is not active should return false"
-    (logic/active-card? {:active-card false}) => false))
+    (logic/activeCard? {:activeCard false}) => false))
 
 (fact "high-frequency-small-interval?"
   (fact "given there are 3 or more transactions in the last 2 minutes should return true"
@@ -82,31 +106,31 @@
 
 (fact "execute-transaction"
   (fact "given that the account has limit >= transaction amount should apply the transaction"
-    (logic/execute-transaction state-fixture/account-with-1mm-available-limit
+    (logic/execute-transaction state-fixture/account-with-1mm-availableLimit
                                {:transaction trx-fixture/one-regular})
                                =>
-                               (-> state-fixture/account-with-1mm-available-limit
+                               (-> state-fixture/account-with-1mm-availableLimit
                                    (update :transactions conj trx-fixture/one-regular)))
 
   (fact "given that the account does not has limit >= transaction amount should apply violation :insufficient-limit"
-    (logic/execute-transaction state-fixture/account-with-1-available-limit
+    (logic/execute-transaction state-fixture/account-with-1-availableLimit
                                {:transaction trx-fixture/with-10-amount})
                                =>
-                               (-> state-fixture/account-with-1-available-limit
+                               (-> state-fixture/account-with-1-availableLimit
                                    (update :violations conj :insufficient-limit)))
 
-  (fact "given that the account has an active-card should apply the transaction"
-    (logic/execute-transaction state-fixture/account-with-active-card
+  (fact "given that the account has an activeCard should apply the transaction"
+    (logic/execute-transaction state-fixture/account-with-activeCard
                                {:transaction trx-fixture/one-regular})
                                =>
-                               (-> state-fixture/account-with-active-card
+                               (-> state-fixture/account-with-activeCard
                                    (update :transactions conj trx-fixture/one-regular)))
 
-  (fact "given that the account has not an active-card should apply violation"
-    (logic/execute-transaction state-fixture/account-with-inactive-card
+  (fact "given that the account has not an activeCard should apply violation"
+    (logic/execute-transaction state-fixture/account-with-inactiveCard
                                {:transaction trx-fixture/one-regular})
                                =>
-                               (-> state-fixture/account-with-inactive-card
+                               (-> state-fixture/account-with-inactiveCard
                                    (update :violations conj :card-not-active)))
 
   (fact "given that the state does not have 3 transactions on two minute interval should apply transaction"
@@ -118,49 +142,56 @@
 
   (fact "given that the state has 3 transactions on two minutes interval should apply violation :high-frequency-small-interval"
     (logic/execute-transaction state-fixture/three-transactions-on-two-minutes-interval
-                               {:transaction (-> state-fixture/three-transactions-on-two-minutes-interval :transactions last)})
+                               {:transaction trx-fixture/one-on-two-minutes-interval})
                                =>
                                (-> state-fixture/three-transactions-on-two-minutes-interval
                                    (update :violations conj :high-frequency-small-interval)))
 
   (fact "given that the state doesn't have 2 similar transactions on two minutes interval should apply transaction"
     (logic/execute-transaction state-fixture/two-not-similar-transactions-on-two-minutes-interval
-                               {:transaction (-> state-fixture/two-not-similar-transactions-on-two-minutes-interval :transactions last)})
+                               {:transaction trx-fixture/one-regular})
                                =>
                                (-> state-fixture/two-not-similar-transactions-on-two-minutes-interval
-                                   (update :transactions conj (-> state-fixture/two-not-similar-transactions-on-two-minutes-interval :transactions last))))
+                                   (update :transactions conj trx-fixture/one-regular)))
 
   (fact "given that the state has 2 similar transactions not on two minutes interval should apply transaction"
     (logic/execute-transaction state-fixture/two-similar-transactions-not-on-two-minutes-interval
-                               {:transaction (-> state-fixture/two-similar-transactions-not-on-two-minutes-interval :transactions last)})
+                               {:transaction trx-fixture/one-regular})
                                =>
                                (-> state-fixture/two-similar-transactions-not-on-two-minutes-interval
-                                   (update :transactions conj (-> state-fixture/two-similar-transactions-not-on-two-minutes-interval :transactions last))))
+                                   (update :transactions conj trx-fixture/one-regular)))
 
   (fact "given that the state has 2 similar transactions on two minutes interval should apply violation :doubled-transaction"
     (logic/execute-transaction state-fixture/two-similar-transactions-on-two-minutes-interval
-                               {:transaction (-> state-fixture/two-similar-transactions-on-two-minutes-interval :transactions last)})
+                               {:transaction trx-fixture/one-similar-on-two-minutes-interval})
                                =>
                                (-> state-fixture/two-similar-transactions-on-two-minutes-interval
                                    (update :violations conj :doubled-transaction)))
 
  (fact "should be able to apply more than one violation to the same transaction"
     (logic/execute-transaction state-fixture/multiple-violations-to-the-same-transaction
-                               {:transaction (-> state-fixture/multiple-violations-to-the-same-transaction :transactions last)})
+                               {:transaction trx-fixture/one-with-multiple-violations})
                                =>
                                (-> state-fixture/multiple-violations-to-the-same-transaction
-                                   (update :violations conj :insufficient-limit :doubled-transaction))))
+                                   (update :violations conj :insufficient-limit :card-not-active)))
+
+ (fact "given a transaction with a merchant in denyList should apply violation :merchant-denied"
+  (logic/execute-transaction state-fixture/account-with-deny-list
+                             {:transaction {:merchant "merchant-a" :amount 10 :time "2020-02-13T10:00:00.000Z"}})
+                             =>
+                             (-> state-fixture/account-with-deny-list
+                                 (update :violations conj :merchant-denied))))
 
 (fact "get-account-response"
   (fact "should return an account with no violations"
     (logic/get-account-response state-fixture/account-with-no-violations)
-      => {:account {:active-card true :available-limit 10} :violations []})
+      => {:account {:activeCard true :availableLimit 10} :violations []})
 
   (fact "should return an account with one violation :insufficient-limit"
     (logic/get-account-response state-fixture/account-with-insufficient-limit-violation)
-      => {:account {:active-card true :available-limit 0} :violations [:insufficient-limit]})
+      => {:account {:activeCard true :availableLimit 0} :violations [:insufficient-limit]})
 
   (fact "should return an account with multiple violations :card-not-active :insufficient-limit :high-frequency-small-interval"
     (logic/get-account-response state-fixture/account-with-multiple-violations)
-      => {:account {:active-card false :available-limit 0} :violations [:card-not-active :insufficient-limit :high-frequency-small-interval]}))
+      => {:account {:activeCard false :availableLimit 0} :violations [:card-not-active :insufficient-limit :high-frequency-small-interval]}))
 

@@ -14,6 +14,14 @@
   [input]
   (contains? input :transaction))
 
+(defn is-deny-list?
+  [input]
+  (contains? input :denyList))
+
+(defn add-deny-list
+  [state denyList]
+  (update-in state [:account] merge denyList))
+
 (defn- apply-violation
   [state violation]
   (update state :violations conj violation))
@@ -32,12 +40,16 @@
   "return true if an account has sufficient limit to complete a transaction,
    false otherwise"
   [account transaction-amount]
-  (true? (>= (:available-limit account) transaction-amount)))
+  (true? (>= (:availableLimit account) transaction-amount)))
 
-(defn active-card?
+(defn activeCard?
   "return true if a card is active, false otherwise"
    [account]
-   (true? (:active-card account)))
+   (true? (:activeCard account)))
+
+(defn is-merchant-in-deny-list?
+  [merchant deny-list]
+  (contains? (set deny-list) merchant))
 
 (defn- filter-transactions-between-dates
   [transactions from to]
@@ -79,9 +91,9 @@
     state
     (apply-violation state :insufficient-limit)))
 
-(defn- apply-active-card-validation
+(defn- apply-activeCard-validation
   [state]
-  (if (active-card? (:account state))
+  (if (activeCard? (:account state))
     state
     (apply-violation state :card-not-active)))
 
@@ -97,28 +109,35 @@
     (apply-violation state :doubled-transaction)
     state))
 
-(defn- update-available-limit
+(defn- apply-deny-list-validation
+  [state transaction]
+  (if (is-merchant-in-deny-list? (:merchant transaction) (get-in state [:account :denyList]))
+    (apply-violation state :merchant-denied)
+    state))
+
+(defn- update-availableLimit
   [state]
   (->> state
        (:transactions)
        (map :amount)
        (reduce +)
-       (update-in state [:account :available-limit] -)))
+       (update-in state [:account :availableLimit] -)))
 
 (defn- apply-validations
   [state transaction]
   (-> state
-      (update-available-limit)
+      (update-availableLimit)
       (assoc :violations [])
       (apply-limit-validation transaction)
-      (apply-active-card-validation)
+      (apply-activeCard-validation)
       (apply-high-frequency-small-interval-validation transaction)
-      (apply-similar-transactions-validation transaction)))
+      (apply-similar-transactions-validation transaction)
+      (apply-deny-list-validation transaction)))
 
 (defn get-account-response
   [state]
   (-> state
-      (update-available-limit)
+      (update-availableLimit)
       (select-keys [:account :violations])))
 
 (defn- apply-transaction

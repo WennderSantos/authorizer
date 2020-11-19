@@ -19,6 +19,10 @@
 
       (logic/is-transaction? input-line)
         (-> (exec logic/execute-transaction state input-line)
+            (recur))
+
+      (logic/is-deny-list? input-line)
+        (-> (exec logic/add-deny-list state input-line)
             (recur)))))
 
 (defn -main

@@ -1,6 +1,15 @@
 (ns authorizer.transaction_fixture
   (:require [authorizer.utils :as utils]))
 
+(def one-on-two-minutes-interval
+  {:merchant "mac donalds" :amount 4 :time "2020-02-13T10:01:59.000Z"})
+
+(def one-similar-on-two-minutes-interval
+   {:merchant "starbucks" :amount 1 :time "2020-02-13T10:01:40.000Z"})
+
+(def one-with-multiple-violations
+   {:merchant "starbucks" :amount 2000 :time "2020-02-13T10:01:40.000Z"})
+
 (def three-on-two-minutes-interval
   [{:merchant "Burger King" :amount 10 :time "2019-02-13T10:00:00.000Z"}
    {:merchant "Burger King" :amount 11 :time "2019-02-13T10:00:00.000Z"}
